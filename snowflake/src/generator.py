@@ -13,14 +13,16 @@ from PIL import Image, ImageDraw, ImageFilter
 DEFAULT_PARAMS = {
     "size":              2048,   # canvas pixels
     "arm_length":        0.44,   # arm length as fraction of half-canvas
-    "branch_levels":     4,      # recursion depth (3=simple, 4=detailed, 5=very fine)
-    "branch_ratio":      0.42,   # child branch length / parent length
+    "branch_levels":     5,      # recursion depth — 5 gives FD in 1.70-1.90 target range
+    "branch_ratio":      0.40,   # child branch length / parent length (shorter = denser)
     "branch_angle":      60.0,   # branch angle off parent (degrees)
-    "branch_spacing":    0.30,   # spacing between branch pairs (fraction of parent length)
-    "branch_offset":     0.20,   # where first branch starts along arm (fraction)
-    "arm_width":         3.0,    # pixel width of primary arm
-    "width_decay":       0.62,   # child width = parent_width * width_decay
-    "min_length_px":     4,      # stop recursing below this pixel length
+    "branch_spacing":    0.22,   # tighter spacing → more branches → higher FD
+    "branch_offset":     0.14,   # start branching closer to base
+    "arm_width":         3.5,    # pixel width of primary arm
+    "width_decay":       0.60,   # child width = parent_width * width_decay
+    "min_length_px":     3,      # stop recursing below this pixel length
+    "tip_plates":        True,   # hexagonal plate caps at branch tips
+    "tip_plate_ratio":   0.18,   # tip plate radius as fraction of branch length
     "background":        (8, 12, 28),
     "flake_colour":      (210, 230, 255),
     "blur_radius":       0.6,    # slight anti-alias blur on final mask
@@ -132,6 +134,27 @@ def _draw_branch(draw, cx, cy, angle, length, width, depth, p):
                 p=p,
             )
         t += spacing
+
+    # Hexagonal plate cap at tip (matches sectored plate morphology in real crystals)
+    if p.get("tip_plates") and depth >= 2:
+        plate_r = length * p.get("tip_plate_ratio", 0.18)
+        if plate_r >= 2:
+            _draw_hex_plate(draw, ex, ey, plate_r, angle, w)
+
+
+def _draw_hex_plate(draw, cx, cy, radius, angle_offset, line_width):
+    """Draw a filled hexagonal plate centred at (cx, cy)."""
+    pts = []
+    for i in range(6):
+        a = np.radians(angle_offset + i * 60)
+        pts.append((cx + radius * np.cos(a), cy - radius * np.sin(a)))
+    draw.polygon(pts, fill=255, outline=200)
+    # Inner detail lines (sector lines across the plate)
+    for i in range(0, 6, 2):
+        a = np.radians(angle_offset + i * 60)
+        ix = cx + radius * 0.6 * np.cos(a)
+        iy = cy - radius * 0.6 * np.sin(a)
+        draw.line([(cx, cy), (ix, iy)], fill=180, width=max(1, line_width - 1))
 
 
 def save(img, path, dpi=300):
