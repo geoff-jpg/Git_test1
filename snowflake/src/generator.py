@@ -11,23 +11,22 @@ from PIL import Image, ImageDraw, ImageFilter
 
 
 DEFAULT_PARAMS = {
-    "size":              2048,   # canvas pixels
-    "arm_length":        0.44,   # arm length as fraction of half-canvas
-    "branch_levels":     5,      # recursion depth
-    "branch_ratio":      0.40,   # child branch length / parent length
-    "branch_angle":      60.0,   # snapped to exact 60° — fixes BAD metric
-    "branch_spacing":    0.22,   # spacing between branch pairs
-    "branch_offset":     0.14,   # where first branch starts along arm
-    "arm_width":         5.0,    # wider base for stronger taper power-law fit
-    "width_decay":       0.55,   # steeper width decay → better ATP power-law
+    "size":              4096,   # larger canvas — detail now visible at full size
+    "arm_length":        0.44,
+    "branch_levels":     5,
+    "branch_ratio":      0.40,
+    "branch_angle":      60.0,
+    "branch_spacing":    0.22,
+    "branch_offset":     0.14,
+    "arm_width":         5.0,
+    "width_decay":       0.55,
     "min_length_px":     3,
     "tip_plates":        True,
     "tip_plate_ratio":   0.18,
-    "hub_plate":         True,   # central hexagonal hub plate
-    "hub_radius":        0.055,  # hub radius as fraction of half-canvas
+    "hub_plate":         False,  # no hub shapes — arms meet naturally at centre
     "background":        (8, 12, 28),
     "flake_colour":      (210, 230, 255),
-    "blur_radius":       0.6,
+    "blur_radius":       0.8,
     "glow":              True,
     "noise_sigma":       1.2,
 }
@@ -174,16 +173,16 @@ def _draw_fractal_tip(draw, cx, cy, radius, angle_offset, parent_width, p):
         ey = cy - np.sin(rad) * arm_len
         draw.line([(cx, cy), (ex, ey)], fill=255, width=max(1, int(arm_width)))
 
-        # One level of sub-branches on each tip arm
-        for t_frac in (0.35, 0.65):
-            bx = cx + np.cos(rad) * arm_len * t_frac
-            by = cy - np.sin(rad) * arm_len * t_frac
-            for sign in (+1, -1):
-                sub_angle = round((arm_angle + sign * 60.0) / 60.0) * 60.0
-                sr = np.radians(sub_angle)
-                sx = bx + np.cos(sr) * child_len * (1 - 0.3 * t_frac)
-                sy = by - np.sin(sr) * child_len * (1 - 0.3 * t_frac)
-                draw.line([(bx, by), (sx, sy)], fill=255, width=max(1, int(child_w)))
+        # Single pair of sub-branches at mid-point of each tip arm only
+        t_frac = 0.50
+        bx = cx + np.cos(rad) * arm_len * t_frac
+        by = cy - np.sin(rad) * arm_len * t_frac
+        for sign in (+1, -1):
+            sub_angle = round((arm_angle + sign * 60.0) / 60.0) * 60.0
+            sr = np.radians(sub_angle)
+            sx = bx + np.cos(sr) * child_len * 0.75
+            sy = by - np.sin(sr) * child_len * 0.75
+            draw.line([(bx, by), (sx, sy)], fill=255, width=max(1, int(child_w)))
 
 
 def save(img, path, dpi=300):
