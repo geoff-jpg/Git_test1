@@ -13,21 +13,23 @@ from PIL import Image, ImageDraw, ImageFilter
 DEFAULT_PARAMS = {
     "size":              2048,   # canvas pixels
     "arm_length":        0.44,   # arm length as fraction of half-canvas
-    "branch_levels":     5,      # recursion depth — 5 gives FD in 1.70-1.90 target range
-    "branch_ratio":      0.40,   # child branch length / parent length (shorter = denser)
-    "branch_angle":      60.0,   # branch angle off parent (degrees)
-    "branch_spacing":    0.22,   # tighter spacing → more branches → higher FD
-    "branch_offset":     0.14,   # start branching closer to base
-    "arm_width":         3.5,    # pixel width of primary arm
-    "width_decay":       0.60,   # child width = parent_width * width_decay
-    "min_length_px":     3,      # stop recursing below this pixel length
-    "tip_plates":        True,   # hexagonal plate caps at branch tips
-    "tip_plate_ratio":   0.18,   # tip plate radius as fraction of branch length
+    "branch_levels":     5,      # recursion depth
+    "branch_ratio":      0.40,   # child branch length / parent length
+    "branch_angle":      60.0,   # snapped to exact 60° — fixes BAD metric
+    "branch_spacing":    0.22,   # spacing between branch pairs
+    "branch_offset":     0.14,   # where first branch starts along arm
+    "arm_width":         5.0,    # wider base for stronger taper power-law fit
+    "width_decay":       0.55,   # steeper width decay → better ATP power-law
+    "min_length_px":     3,
+    "tip_plates":        True,
+    "tip_plate_ratio":   0.18,
+    "hub_plate":         True,   # central hexagonal hub plate
+    "hub_radius":        0.055,  # hub radius as fraction of half-canvas
     "background":        (8, 12, 28),
     "flake_colour":      (210, 230, 255),
-    "blur_radius":       0.6,    # slight anti-alias blur on final mask
-    "glow":              True,   # add faint glow halo around crystal
-    "noise_sigma":       1.2,    # photographic grain
+    "blur_radius":       0.6,
+    "glow":              True,
+    "noise_sigma":       1.2,
 }
 
 
@@ -63,6 +65,12 @@ def generate(params=None):
         mask = Image.fromarray(
             np.maximum(np.array(mask), np.array(rotated)).astype(np.uint8), "L"
         )
+
+    # Central hexagonal hub plate
+    if p.get("hub_plate"):
+        hub_draw = ImageDraw.Draw(mask)
+        hub_r = p["hub_radius"] * half
+        _draw_hex_plate(hub_draw, half, half, hub_r, angle_offset=0, line_width=3)
 
     # Slight gaussian blur for anti-aliasing
     if p["blur_radius"] > 0:
@@ -113,7 +121,9 @@ def _draw_branch(draw, cx, cy, angle, length, width, depth, p):
     # Child branches along this branch
     offset = p["branch_offset"]
     spacing = p["branch_spacing"]
-    branch_angle = p["branch_angle"]
+    # Snap branch angle to nearest multiple of 60° to fix BAD metric
+    raw_angle = p["branch_angle"]
+    branch_angle = round(raw_angle / 60.0) * 60.0
     child_length = length * p["branch_ratio"]
     child_width  = width  * p["width_decay"]
 
@@ -124,11 +134,13 @@ def _draw_branch(draw, cx, cy, angle, length, width, depth, p):
         by = cy - np.sin(rad) * length * t
 
         for sign in (+1, -1):
+            # Child angle: snap to exact 60° multiples from parent
+            child_angle = round((angle + sign * branch_angle) / 60.0) * 60.0
             _draw_branch(
                 draw,
                 cx=bx, cy=by,
-                angle=angle + sign * branch_angle,
-                length=child_length * (1 - 0.3 * t),  # branches shorten toward tip
+                angle=child_angle,
+                length=child_length * (1 - 0.25 * t),
                 width=child_width,
                 depth=depth - 1,
                 p=p,
