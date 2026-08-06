@@ -66,11 +66,12 @@ def generate(params=None):
             np.maximum(np.array(mask), np.array(rotated)).astype(np.uint8), "L"
         )
 
-    # Central hexagonal hub plate
+    # Central hub: fractal mini-snowflake (no solid hexagon)
     if p.get("hub_plate"):
         hub_draw = ImageDraw.Draw(mask)
         hub_r = p["hub_radius"] * half
-        _draw_hex_plate(hub_draw, half, half, hub_r, angle_offset=0, line_width=3)
+        _draw_fractal_tip(hub_draw, half, half, hub_r, angle_offset=0,
+                          parent_width=p["arm_width"], p=p)
 
     # Slight gaussian blur for anti-aliasing
     if p["blur_radius"] > 0:
@@ -147,26 +148,42 @@ def _draw_branch(draw, cx, cy, angle, length, width, depth, p):
             )
         t += spacing
 
-    # Hexagonal plate cap at tip (matches sectored plate morphology in real crystals)
+    # Fractal tip: miniature 6-armed snowflake at branch tip, no polygon drawn
     if p.get("tip_plates") and depth >= 2:
-        plate_r = length * p.get("tip_plate_ratio", 0.18)
-        if plate_r >= 2:
-            _draw_hex_plate(draw, ex, ey, plate_r, angle, w)
+        tip_r = length * p.get("tip_plate_ratio", 0.18)
+        if tip_r >= p["min_length_px"]:
+            _draw_fractal_tip(draw, ex, ey, tip_r, angle, w, p)
 
 
-def _draw_hex_plate(draw, cx, cy, radius, angle_offset, line_width):
-    """Draw a filled hexagonal plate centred at (cx, cy)."""
-    pts = []
-    for i in range(6):
-        a = np.radians(angle_offset + i * 60)
-        pts.append((cx + radius * np.cos(a), cy - radius * np.sin(a)))
-    draw.polygon(pts, fill=255, outline=200)
-    # Inner detail lines (sector lines across the plate)
-    for i in range(0, 6, 2):
-        a = np.radians(angle_offset + i * 60)
-        ix = cx + radius * 0.6 * np.cos(a)
-        iy = cy - radius * 0.6 * np.sin(a)
-        draw.line([(cx, cy), (ix, iy)], fill=180, width=max(1, line_width - 1))
+def _draw_fractal_tip(draw, cx, cy, radius, angle_offset, parent_width, p):
+    """
+    Draw a miniature 6-armed fractal snowflake centred at a branch tip.
+    Arms are scaled to fit within the hexagonal envelope of the given radius.
+    No hexagon outline is drawn — structure only.
+    """
+    arm_len   = radius * 0.90          # arms reach just inside hexagon boundary
+    arm_width = max(1, parent_width * p["width_decay"])
+    child_len = arm_len * p["branch_ratio"]
+    child_w   = arm_width * p["width_decay"]
+
+    for k in range(6):
+        # Align tip arms to exact 60° multiples from parent arm direction
+        arm_angle = round((angle_offset + k * 60.0) / 60.0) * 60.0
+        rad = np.radians(arm_angle)
+        ex = cx + np.cos(rad) * arm_len
+        ey = cy - np.sin(rad) * arm_len
+        draw.line([(cx, cy), (ex, ey)], fill=255, width=max(1, int(arm_width)))
+
+        # One level of sub-branches on each tip arm
+        for t_frac in (0.35, 0.65):
+            bx = cx + np.cos(rad) * arm_len * t_frac
+            by = cy - np.sin(rad) * arm_len * t_frac
+            for sign in (+1, -1):
+                sub_angle = round((arm_angle + sign * 60.0) / 60.0) * 60.0
+                sr = np.radians(sub_angle)
+                sx = bx + np.cos(sr) * child_len * (1 - 0.3 * t_frac)
+                sy = by - np.sin(sr) * child_len * (1 - 0.3 * t_frac)
+                draw.line([(bx, by), (sx, sy)], fill=255, width=max(1, int(child_w)))
 
 
 def save(img, path, dpi=300):
