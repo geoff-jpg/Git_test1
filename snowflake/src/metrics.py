@@ -186,19 +186,21 @@ def arm_count_length_ratio(mask):
     rows, cols = binary.shape
     cx = cy = rows // 2
 
-    # Remove central blob: mask a small central circle
+    # Remove central blob with a larger exclusion radius so only primary arm
+    # trunks remain as separate components (secondary branches stay attached).
     y_idx, x_idx = np.mgrid[0:rows, 0:cols]
     dist = np.sqrt((x_idx - cx)**2 + (y_idx - cy)**2)
-    central_radius = rows * 0.06
+    central_radius = rows * 0.18   # enlarged from 0.06 → isolates primary arms
     outer = binary.copy()
     outer[dist < central_radius] = 0
 
     labeled, n_comp = label(outer)
-    # Arm length: max distance from centre for each component
+    # Keep only components large enough to be a primary arm (≥ 0.3% of pixels)
+    min_arm_pixels = int(rows * cols * 0.003)
     arm_lengths = []
     for comp_id in range(1, n_comp + 1):
         pts = np.argwhere(labeled == comp_id)
-        if len(pts) < 5:
+        if len(pts) < min_arm_pixels:
             continue
         d = np.sqrt((pts[:, 1] - cx)**2 + (pts[:, 0] - cy)**2)
         arm_lengths.append(d.max())
