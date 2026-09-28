@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Repository Status
+## Repository Contents
 
-This repository is currently empty. Update this file as the project takes shape.
+- `kepler.c` — C99 program demonstrating Kepler's three laws of planetary motion.
+
+## Build & Run
+
+```sh
+cc -std=c99 -Wall -Wextra -pedantic -O2 kepler.c -o kepler -lm
+./kepler
+```
