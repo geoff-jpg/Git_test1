@@ -13,7 +13,9 @@ const C = {
 };
 const HF = "Arial";   // headings
 const BF = "Calibri"; // body
-const TOTAL = 12;
+// MOVIE=1 builds the video version: no Sources slide, so 11 slides in total
+const MOVIE = process.env.MOVIE === "1";
+const TOTAL = MOVIE ? 11 : 12;
 
 async function icon(Comp, color, size = 256) {
   const svg = RDS.renderToStaticMarkup(React.createElement(Comp, { color: "#" + color, size: String(size) }));
@@ -316,8 +318,8 @@ function iconDot(s, data, x, y, d, fill) {
     s.addNotes("Closing summary. Invite questions on the Mero timeline, the scale-up to commercial production from 2027, and what Kraken Robotics ownership means for the Brazil business.");
   }
 
-  // ---------- 12. Sources ----------
-  {
+  // ---------- 12. Sources (deck only) ----------
+  if (!MOVIE) {
     const s = contentSlide(12, "References", "Sources");
     const src = [
       "JPT (SPE), 19 June 2026: New seismic acquisition technology advances offshore Brazil",
@@ -332,6 +334,6 @@ function iconDot(s, data, x, y, d, fill) {
     s.addText("Node counts differ between sources over time (600 planned in 2024; 660 in production in 2026).", { x: 0.5, y: 4.75, w: 9, h: 0.3, fontFace: BF, fontSize: 10, italic: true, color: C.muted, margin: 0, isTextBox: true });
   }
 
-  await pres.writeFile({ fileName: path.join(__dirname, "raw.pptx") });
+  await pres.writeFile({ fileName: path.join(__dirname, MOVIE ? "movie.pptx" : "raw.pptx") });
   console.log("written");
 })();
