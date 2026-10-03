@@ -1,0 +1,263 @@
+<title>Brazil Deck Style Picker</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&family=Exo+2:wght@400;700&family=Inter:wght@400;700&family=Lato:wght@400;700&family=Merriweather:wght@400;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Playfair+Display:wght@400;700&family=Poppins:wght@400;700&family=Raleway:wght@400;700&family=Roboto:wght@400;700&display=swap">
+<style>
+/* Layout: one reading column; live preview on top, then font and colour reference tables */
+:root {
+  --bg: #f6f8fa; --surface: #ffffff; --fg: #142433; --muted: #5b6b7b; --line: #d9e1e8;
+  --accent: #0e7a55; --accent-fg: #ffffff; --chip: #e8f1ed;
+  --ui: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1622; --surface: #12212f; --fg: #e6edf3; --muted: #93a4b5; --line: #24384b;
+  --accent: #3fcf98; --accent-fg: #06251a; --chip: #173327; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b1622; --surface: #12212f; --fg: #e6edf3; --muted: #93a4b5; --line: #24384b;
+  --accent: #3fcf98; --accent-fg: #06251a; --chip: #173327; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font-family: var(--ui); font-size: 15px; line-height: 1.5 }
+.wrap { max-width: 1100px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 64px; display: grid; gap: 28px }
+h1 { font-size: 1.75rem; margin: 0; text-wrap: balance }
+h2 { font-size: 1.2rem; margin: 0 0 4px; text-wrap: balance }
+p { margin: 0; max-width: 70ch }
+.lede { color: var(--muted) }
+section { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 14px; min-width: 0 }
+.controls { display: flex; flex-wrap: wrap; gap: 12px }
+.controls label { display: grid; gap: 4px; font-size: .8rem; color: var(--muted); font-weight: 600; letter-spacing: .04em; text-transform: uppercase }
+select { font: inherit; font-size: .95rem; text-transform: none; letter-spacing: 0; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); min-width: 0; max-width: 100% }
+.previews { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px }
+.choice { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--chip); border-radius: 8px; padding: 10px 12px }
+.choice code { font-size: .9rem; white-space: normal; word-break: break-word; flex: 1 1 260px; min-width: 0 }
+button { font: inherit; font-size: .85rem; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 5px 10px; cursor: pointer }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-weight: 600 }
+button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent) }
+button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px }
+table { border-collapse: collapse; width: 100%; min-width: 760px }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle }
+th { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--bg) }
+tr:last-child td { border-bottom: 0 }
+.grp td { background: var(--bg); font-weight: 700; font-size: .85rem }
+.sample { font-size: 1.35rem; line-height: 1.2 }
+.sample small { display: block; font-size: .85rem; opacity: .8; margin-top: 2px }
+.note { font-size: .8rem; color: var(--muted) }
+.warn { display: inline-block; font-size: .72rem; padding: 1px 6px; border-radius: 4px; background: #f6d8a8; color: #4a2c00; margin-top: 4px }
+.btns { display: flex; gap: 6px; flex-wrap: wrap }
+.sw { display: flex; gap: 6px; flex-wrap: wrap }
+.sw span { display: grid; gap: 2px; justify-items: center; font-size: .68rem; color: var(--muted); font-variant-numeric: tabular-nums }
+.sw i { width: 44px; height: 32px; border-radius: 5px; border: 1px solid var(--line); display: block }
+/* mini slides: colours come from the chosen palette, not the page theme */
+.slide { aspect-ratio: 16 / 9; width: 100%; max-width: 100%; border-radius: 8px; overflow: hidden; position: relative; container-type: inline-size; box-shadow: 0 2px 10px rgba(0,0,0,.15) }
+.slide .in { position: absolute; inset: 0; padding: 6cqw 6cqw 4cqw }
+.k { font-size: 1.9cqw; letter-spacing: .3em; font-weight: 700; text-transform: uppercase }
+.t1 { font-size: 7.5cqw; font-weight: 700; line-height: 1.02; margin-top: 1.5cqw }
+.st { font-size: 3cqw; margin-top: 2cqw }
+.bd { font-size: 2.1cqw; margin-top: 1.5cqw; max-width: 60% }
+.rings { position: absolute; right: -14cqw; top: 6cqw; width: 60cqw; aspect-ratio: 1; border-radius: 50%;
+  background: repeating-radial-gradient(circle, transparent 0 4.4cqw, var(--ring) 4.4cqw calc(4.4cqw + 1px)); opacity: .5 }
+.t2 { font-size: 4.2cqw; font-weight: 700; margin-top: .8cqw }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.4cqw; margin-top: 4cqw }
+.card { border-radius: 1.2cqw; padding: 2.4cqw; border: 1px solid var(--cl) }
+.dot { width: 5cqw; height: 5cqw; border-radius: 50% }
+.big { font-size: 7cqw; font-weight: 700; margin-top: 1.5cqw; line-height: 1 }
+.lbl { font-size: 2.2cqw; font-weight: 700; margin-top: 1cqw }
+.sm { font-size: 1.75cqw; margin-top: .6cqw; line-height: 1.3 }
+.foot { position: absolute; left: 6cqw; right: 6cqw; bottom: 2.6cqw; display: flex; justify-content: space-between; font-size: 1.4cqw }
+@media (prefers-reduced-motion: no-preference) { .slide * { transition: color .2s, background-color .2s } }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:6px">
+    <h1>Brazil deck style picker</h1>
+    <p class="lede">Choose a heading font, a body font and a colour palette. The two slides below update as you choose. When you're happy, copy your choice and send it back, and I'll rebuild the PowerPoint and the movie with it.</p>
+  </header>
+
+  <section aria-labelledby="pv">
+    <h2 id="pv">Your choice</h2>
+    <div class="controls">
+      <label for="selH">Headings<select id="selH"></select></label>
+      <label for="selB">Body text<select id="selB"></select></label>
+      <label for="selP">Colours<select id="selP"></select></label>
+      <label for="selS">Apply to<select id="selS">
+        <option>Whole deck</option>
+        <option>Brazil slides only (3 History, 4 Ecosystem)</option>
+      </select></label>
+    </div>
+    <div class="previews">
+      <div class="slide" id="s1"><div class="in">
+        <div class="rings"></div>
+        <div class="k" data-c="accent" style="margin-top:9cqw">September 2026 briefing</div>
+        <div class="t1 H" data-c="text">Sonardyne<br>in Brazil</div>
+        <div class="st B" data-c="highlight">Pre-salt projects, partners and new technology</div>
+        <div class="bd B" data-c="muted">On Demand Ocean Bottom Nodes at Mero, optical data harvesting and the fleet behind Brazil's deepwater operations</div>
+      </div></div>
+      <div class="slide" id="s2"><div class="in">
+        <div class="k B" data-c="accent">At a glance</div>
+        <div class="t2 H" data-c="text">Three things to know</div>
+        <div class="cards">
+          <div class="card" data-bg="card"><div class="dot" data-bg="accent"></div><div class="big H" data-c="highlight">20+</div><div class="lbl B" data-c="text">years in Brazil</div><div class="sm B" data-c="muted">Local office and Portuguese-speaking support</div></div>
+          <div class="card" data-bg="card"><div class="dot" data-bg="accent"></div><div class="big H" data-c="highlight">84</div><div class="lbl B" data-c="text">OD OBNs at Mero</div><div class="sm B" data-c="muted">First field deployment, early 2026</div></div>
+          <div class="card" data-bg="card"><div class="dot" data-bg="accent"></div><div class="big H" data-c="highlight">2027</div><div class="lbl B" data-c="text">commercial production</div><div class="sm B" data-c="muted">Hundreds or thousands of nodes per field</div></div>
+        </div>
+        <div class="foot B" data-c="muted"><span>Sonardyne in Brazil</span><span>02 / 11</span></div>
+      </div></div>
+    </div>
+    <div class="choice">
+      <code id="out"></code>
+      <button class="primary" id="copy" type="button">Copy choice</button>
+    </div>
+    <p class="note" id="fontNote"></p>
+  </section>
+
+  <section aria-labelledby="ft">
+    <h2 id="ft">Fonts</h2>
+    <p class="lede">Each sample is drawn in the font itself. Fonts marked <em>Office</em> come with Microsoft Office, so the deck looks the same on any PC that has PowerPoint. Google Fonts are free but must be installed on the computer that presents the PowerPoint. The movie is not affected either way, because I render it here.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Font</th><th>Sample</th><th>Style</th><th>Where it works</th><th>Use as</th></tr></thead>
+      <tbody id="fontRows"></tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="ct">
+    <h2 id="ct">Colour palettes</h2>
+    <p class="lede">Each palette has six roles: <strong>background</strong>, <strong>card</strong> (panels), <strong>accent</strong> (labels, icon circles), <strong>highlight</strong> (big numbers, the year 2026), <strong>text</strong> and <strong>muted</strong> (secondary text). You can also give me your own hex codes, such as your company brand colours.</p>
+    <div class="tbl"><table>
+      <thead><tr><th>Palette</th><th>Swatches (background · card · accent · highlight · text · muted)</th><th>Mood</th><th></th></tr></thead>
+      <tbody id="palRows"></tbody>
+    </table></div>
+  </section>
+</div>
+
+<script>
+const FONTS = [
+  ["Microsoft Office fonts (safe on any PC with PowerPoint)"],
+  ["Arial", "sans-serif", "Clean, neutral sans", "Windows + Mac", "Current headings"],
+  ["Calibri", "sans-serif", "Soft, rounded sans", "Windows + Mac", "Current body text"],
+  ["Segoe UI", "sans-serif", "Modern, crisp, very readable", "Windows only (Mac swaps in a similar font)"],
+  ["Century Gothic", "sans-serif", "Geometric, airy, design-led", "Windows + Mac"],
+  ["Franklin Gothic Medium", "sans-serif", "Strong, editorial, newsy", "Windows + Mac"],
+  ["Gill Sans MT", "sans-serif", "Classic British humanist", "Windows + Mac"],
+  ["Verdana", "sans-serif", "Wide, very legible at small sizes", "Windows + Mac"],
+  ["Trebuchet MS", "sans-serif", "Friendly, slightly technical", "Windows + Mac"],
+  ["Bahnschrift", "sans-serif", "Engineering (DIN-style), technical", "Windows 10/11 only"],
+  ["Georgia", "serif", "Warm, classic serif", "Windows + Mac"],
+  ["Cambria", "serif", "Sturdy, formal serif", "Windows + Mac"],
+  ["Garamond", "serif", "Elegant, traditional serif", "Windows + Mac"],
+  ["Google Fonts (free; install on the presenting PC)"],
+  ["Montserrat", "sans-serif", "Geometric and bold; designed in Buenos Aires", "Free download"],
+  ["Poppins", "sans-serif", "Round, geometric, contemporary", "Free download"],
+  ["Inter", "sans-serif", "Neutral, modern UI sans", "Free download"],
+  ["Roboto", "sans-serif", "Mechanical yet friendly", "Free download"],
+  ["Lato", "sans-serif", "Warm, corporate, balanced", "Free download"],
+  ["Barlow", "sans-serif", "Slightly rounded, technical", "Free download"],
+  ["Exo 2", "sans-serif", "Futuristic, technology feel", "Free download"],
+  ["Raleway", "sans-serif", "Elegant, thin-to-bold display", "Free download"],
+  ["Oswald", "sans-serif", "Tall, condensed headlines", "Free download", "Headings only"],
+  ["Playfair Display", "serif", "High-contrast, stylish serif", "Free download", "Headings only"],
+  ["Merriweather", "serif", "Robust, readable serif", "Free download"],
+];
+const PALETTES = [
+  ["Deep Ocean (current)", "Sonardyne navy with green and gold; calm, premium", {bg:"0A2540", card:"0F2F4F", accent:"17B584", highlight:"F2C12E", text:"FFFFFF", muted:"9FB3C8"}],
+  ["Bandeira", "Brazilian flag blue, green and yellow; national, bold", {bg:"012169", card:"0B2E80", accent:"00A859", highlight:"FEDD00", text:"FFFFFF", muted:"B8C4E6"}],
+  ["Atlantic Teal", "Cool sea blues; clean, technical", {bg:"03273A", card:"07384F", accent:"00B4D8", highlight:"90E0EF", text:"FFFFFF", muted:"9DBBC9"}],
+  ["Amazon Forest", "Deep greens with warm gold; natural, sustainable", {bg:"0B2B1E", card:"12392A", accent:"5CC98A", highlight:"E9C46A", text:"F4FAF6", muted:"A3C2B2"}],
+  ["Copacabana Sunset", "Dusk purple with coral and amber; warm, lively", {bg:"2A1A3F", card:"3A2656", accent:"FF7B54", highlight:"FFC15E", text:"FFFFFF", muted:"C5B5DB"}],
+  ["Pre-salt Amber", "Charcoal with amber and sky blue; industrial, energy", {bg:"1C1F24", card:"2A2F37", accent:"F2A900", highlight:"4FC3F7", text:"FFFFFF", muted:"AEB6C2"}],
+  ["Carnival", "Night purple, magenta and yellow; festive, eye-catching", {bg:"1E0B33", card:"2E1550", accent:"FF3D8B", highlight:"FFD60A", text:"FFFFFF", muted:"CDB8E6"}],
+  ["Signal Red", "Near-black steel with signal red; sharp, engineering", {bg:"101820", card:"1B2733", accent:"E63946", highlight:"F1FAEE", text:"FFFFFF", muted:"A9B4C0"}],
+  ["Clean Corporate (light)", "White with navy and green; bright, printable", {bg:"FFFFFF", card:"EEF3F8", accent:"0E8A5F", highlight:"0A2540", text:"13263A", muted:"5A6B7D"}],
+  ["Ipanema (light)", "White with teal and amber; fresh, coastal", {bg:"FFFFFF", card:"E6F4F1", accent:"00796B", highlight:"C77700", text:"102F35", muted:"4F6B70"}],
+];
+const realFonts = FONTS.filter(f => f.length > 1);
+const stack = f => `"${f[0]}", ${f[1]}`;
+const $ = id => document.getElementById(id);
+
+function installed(name) {
+  const c = document.createElement("canvas").getContext("2d");
+  const s = "Sonardyne in Brazil 0123456789 mmmwwwlli";
+  return ["monospace", "serif", "sans-serif"].some(base => {
+    c.font = `40px ${base}`; const w0 = c.measureText(s).width;
+    c.font = `40px "${name}", ${base}`; return c.measureText(s).width !== w0;
+  });
+}
+
+const state = { h: "Arial", b: "Calibri", p: 0, s: 0 };
+try { Object.assign(state, JSON.parse(localStorage.getItem("brazilStyle") || "{}")); } catch (e) {}
+
+function fill() {
+  for (const [id, key] of [["selH", "h"], ["selB", "b"]]) {
+    const sel = $(id);
+    let grp;
+    FONTS.forEach(f => {
+      if (f.length === 1) { grp = document.createElement("optgroup"); grp.label = f[0].replace(/ \(.*/, ""); sel.append(grp); return; }
+      const o = new Option(f[0], f[0]); o.style.fontFamily = stack(f); grp.append(o);
+    });
+    sel.addEventListener("change", () => { state[key] = sel.value; apply(); });
+  }
+  PALETTES.forEach((p, i) => $("selP").append(new Option(p[0], i)));
+  $("selP").addEventListener("change", () => { state.p = +$("selP").value; apply(); });
+  $("selS").addEventListener("change", () => { state.s = $("selS").selectedIndex; apply(); });
+
+  const fr = $("fontRows");
+  FONTS.forEach(f => {
+    const tr = document.createElement("tr");
+    if (f.length === 1) { tr.className = "grp"; tr.innerHTML = `<td colspan="5">${f[0]}</td>`; fr.append(tr); return; }
+    tr.innerHTML = `<td><strong>${f[0]}</strong>${f[4] ? `<div class="note">${f[4]}</div>` : ""}<div class="miss"></div></td>
+      <td class="sample" style='font-family:${stack(f)}'><b>Sonardyne in Brazil</b><small>2,000+ days of deepwater trials · São Paulo · Camaçari</small></td>
+      <td>${f[2]}</td><td>${f[3]}</td>
+      <td><div class="btns"><button type="button" data-k="h" data-f="${f[0]}">Headings</button><button type="button" data-k="b" data-f="${f[0]}">Body</button></div></td>`;
+    fr.append(tr);
+  });
+  fr.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state[b.dataset.k] = b.dataset.f; apply(); });
+
+  const pr = $("palRows");
+  PALETTES.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    const sw = Object.entries(p[2]).map(([k, v]) => `<span><i style="background:#${v}" title="${k}"></i>#${v}</span>`).join("");
+    tr.innerHTML = `<td><strong>${p[0]}</strong></td><td><div class="sw">${sw}</div></td><td>${p[1]}</td>
+      <td><button type="button" data-p="${i}">Use</button></td>`;
+    pr.append(tr);
+  });
+  pr.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; state.p = +b.dataset.p; apply(); });
+}
+
+function apply() {
+  const fh = realFonts.find(f => f[0] === state.h) || realFonts[0];
+  const fb = realFonts.find(f => f[0] === state.b) || realFonts[1];
+  const pal = (PALETTES[state.p] || PALETTES[0]);
+  const c = pal[2];
+  $("selH").value = fh[0]; $("selB").value = fb[0]; $("selP").value = state.p; $("selS").selectedIndex = state.s;
+  document.querySelectorAll(".slide").forEach(sl => {
+    sl.style.background = "#" + c.bg;
+    sl.style.setProperty("--ring", "#" + c.accent);
+    sl.style.setProperty("--cl", "#" + (c.bg === "FFFFFF" ? "D5DEE7" : c.card));
+    sl.style.fontFamily = stack(fb);
+    sl.querySelectorAll(".H").forEach(e => e.style.fontFamily = stack(fh));
+    sl.querySelectorAll("[data-c]").forEach(e => e.style.color = "#" + c[e.dataset.c]);
+    sl.querySelectorAll("[data-bg]").forEach(e => e.style.background = "#" + c[e.dataset.bg]);
+  });
+  document.querySelectorAll("#fontRows button").forEach(b => b.setAttribute("aria-pressed", String(state[b.dataset.k] === b.dataset.f)));
+  document.querySelectorAll("#palRows button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.p === state.p)));
+  $("out").textContent = `Headings: ${fh[0]} · Body: ${fb[0]} · Colours: ${pal[0]} · Apply to: ${$("selS").value}`;
+  const missing = [fh[0], fb[0]].filter((n, i, a) => a.indexOf(n) === i && !installed(n));
+  $("fontNote").textContent = missing.length
+    ? `${missing.join(" and ")} ${missing.length > 1 ? "aren't" : "isn't"} installed on this device, so the preview uses a stand-in. The final deck and movie will use the real font.`
+    : "";
+  try { localStorage.setItem("brazilStyle", JSON.stringify(state)); } catch (e) {}
+}
+
+function markMissing() {
+  document.querySelectorAll("#fontRows tr:not(.grp)").forEach(tr => {
+    const name = tr.querySelector("strong").textContent;
+    tr.querySelector(".miss").innerHTML = installed(name) ? "" : '<span class="warn">Not on this device: sample shows a stand-in</span>';
+  });
+}
+
+$("copy").addEventListener("click", () => {
+  const t = $("out").textContent;
+  navigator.clipboard.writeText(t).then(() => { $("copy").textContent = "Copied"; setTimeout(() => $("copy").textContent = "Copy choice", 1500); })
+    .catch(() => { const r = document.createRange(); r.selectNodeContents($("out")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $("copy").textContent = "Selected: press Ctrl+C"; });
+});
+
+fill(); apply();
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { markMissing(); apply(); });
+</script>
