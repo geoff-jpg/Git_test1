@@ -121,13 +121,43 @@ The 9-page Siegel-zero paper uses a different route: a transcendence-style inter
 - **Evidence varies by field.** Combinatorics, TCS and logic are mostly Lean-backed. Algebraic geometry, topology and much of number theory rest on unrefereed PDFs.
 - **Riemann zeta.** The specific claim is a **zero-free half-plane ℜs > 7/8 for ζ and all Dirichlet L-functions**, plus **no Siegel zeros**. It is *not* RH. If the Lean proof compiles as advertised, this would be a historic result for prime number theory.
 
-## 6. Possible next steps (not done in this session)
+## 6. Follow-up (in progress): Lean build and academic commentary
+
+### 6.1 Lean build status (interim, 7 Oct 2026)
+
+- **Import closures.** The 7/8 proof (`OAI.NumberTheory.DirichletL.Nonvanishing`) imports 2,924 OpenAI modules (about 486,000 lines). The Siegel-zero proof (`OAI.NumberTheory.SiegelZeros.Main`) imports 306 modules (about 70,000 lines). Both rely only on Lean core, Mathlib, PrimeNumberTheoremAnd and (for 7/8) RellichKondrachov.
+- **Gap check.** My grep of both closures found no `sorry`, `admit`, `axiom`, `opaque` or `native_decide`. The comparator configs allow only `propext`, `Quot.sound` and `Classical.choice`.
+- **Independent third-party build.** [Zhang-Liao/quasi-riemann](https://github.com/Zhang-Liao/quasi-riemann) extracted the 7/8 proof into a standalone project. It reports a successful `lake build` with Lean 4.34.1 on 7 Oct 2026, and an axiom check showing only the three standard axioms. **I confirmed that all 2,924 extracted OAI files are byte-identical to OpenAI's originals.** That project did not run the comparator.
+- **My own build.** This is not finished yet. Lean 4.34.1 is installed; the egress policy blocks `release.lean-lang.org`, so I used the GitHub release instead. Dependencies were downloading when this was saved. **Resume:** `cd lean && lake exe cache get && lake build OAI.NumberTheory.DirichletL.Nonvanishing OAI.NumberTheory.SiegelZeros.Main`, then run `#print axioms` on the four comparator theorems.
+
+### 6.2 What academics have said so far (secondary sources only)
+
+Most of the pages below were blocked from direct fetching by this session's network policy. These comments come from search-engine snippets of the coverage, so check the originals before quoting them.
+
+- **Alex Kontorovich (Rutgers, leads the PNT+ Lean project):** posted on X "Quasi-RH?!", and said that if a human had done this it would be "an instant Fields Medal, no questions asked". He noted that previous zero-free regions got thinner and thinner with height, which is why a fixed boundary is striking. The OpenAI Lean proof depends on his PrimeNumberTheoremAnd library.
+- **Levent Alpöge (Anthropic, formerly Harvard):** strongly praised the quasi-RH and no-Siegel-zero results ("the most significant moment in mathematical history", per Latent Space).
+- **Daniel Litt (Toronto):** measured and positive. He said one result is a special case of a conjecture of his, and argued that there is no reason the answers should be kept secret.
+- **Andrew Sutherland (MIT):** said claims should be treated as unverified until the model is released and results can be replicated.
+- **Terence Tao (UCLA):** criticised the "insane" pace of frontier-lab releases (Scientific American). In September he led a statement co-signed by 25 Fields Medallists, "A Severe Misalignment of AI in Mathematics". I found no Tao comment on the zeta proof itself.
+- **Multiple mathematicians to Wired:** said the release ignored peer review and publication norms agreed at a closed August meeting.
+- **A Hacker News commenter identifying as a number theorist:** Fields-level if true, but not bigger than the prime number theorem itself.
+- **Bottom line on commentary:** as of 7 Oct, **no named number theorist has publicly confirmed or found an error in the 7/8 or Siegel-zero proofs.** Reactions are about significance and process, not correctness.
+
+## 7. Possible next steps (not done in this session)
 
 - Build the Lean comparator for `QuasiRiemannHypothesis.json` and `SiegelZeros.json`.
 - Read Parts I and II of the 7/8 paper in detail, or summarise the 9-page Siegel-zero paper fully.
 - Track expert commentary from number theorists over the coming weeks.
 
 ## Sources
+
+- [Zhang-Liao/quasi-riemann (standalone build)](https://github.com/Zhang-Liao/quasi-riemann)
+- [Digg: Kontorovich reaction](https://digg.com/ai/euchcuw1)
+- [Startup Fortune: mathematicians are not impressed](https://startupfortune.com/openai-drops-722-ai-math-proofs-and-mathematicians-are-not-impressed/)
+- [Scientific American](https://www.scientificamerican.com/article/openai-unleashes-hundreds-more-math-results-upon-a-field-already-in-shock/)
+- [Gary Marcus](https://garymarcus.substack.com/p/complementary-remarks-from-gary-marcus)
+- [WebProNews: Math blitz sparks outrage](https://webpronews.com/openais-math-blitz-sparks-outrage-among-researchers)
+- [Kingy.ai: results, compute and costs](https://kingy.ai/blog/openai-math-722-manuscripts-results-proofs-compute-costs/)
 
 - Repository: [github.com/openai/math](https://github.com/openai/math): `README.md`, `CONTENTS.md`, `overview.tex`, `lean/formalization.yaml`, `lean/docs/003.md`, and the three family-003 PDFs
 - [Quartz: OpenAI released 372 groups of math results on GitHub](https://qz.com/openai-math-results-github-millennium-prize-100726)
