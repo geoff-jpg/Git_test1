@@ -141,6 +141,53 @@ These could not be checked from the research sandbox and should be confirmed fro
 - Where the Allmaps bulk dataset is, and its licence.
 - Exact Wikidata property numbers: GeoNames P1566, GSS code P836, FAST P2163, LCNAF P244, Vision of Britain P3615/P3616, Commons category P373.
 
+---
+
+## 6. Extending to other countries
+
+The method carries over to other countries largely unchanged. What changes is which national sources fill each slot. Some sources in the UK pipeline already cover the world; others are UK-only and need a national equivalent.
+
+*The country-specific examples in this section come from prior knowledge and have not been verified [U].*
+
+### What already works worldwide
+
+- **Town IDs:** Wikidata and GeoNames cover every country.
+- **Books:** Open Library, WorldCat (paid), Library of Congress and OCLC FAST headings, HathiTrust, Internet Archive and Project Gutenberg. FAST and LC use English-language headings for foreign places too, such as "Lyon (France)".
+- **Maps:** Old Maps Online, Allmaps, the David Rumsey collection and Wikimedia Commons are international. OpenStreetMap can replace OS OpenData for the modern map.
+
+### What needs a national equivalent
+
+| Slot in the UK pipeline | What to look for elsewhere |
+|---|---|
+| ONS town outlines and codes | The national statistics office's municipality list and boundaries, e.g. INSEE codes in France, AGS codes in Germany, CBS codes in the Netherlands, or Census Bureau places / GNIS in the US. OpenStreetMap boundaries can stand in where there are none. |
+| British National Bibliography | The national library's catalogue, e.g. data.bnf.fr (France), the DNB (Germany), the KB (Netherlands), Libris (Sweden) or Trove (Australia). Across Europe, the Europeana API searches many national collections at once. |
+| LCSH / FAST headings | Each country's own subject vocabulary, e.g. RAMEAU in France or GND in Germany. These link to each other and to Wikidata through VIAF, so one town can be matched across languages. |
+| NLS OS sheet indexes | The national mapping agency's or library's historic maps, e.g. IGN "Remonter le temps" (Cassini and État-major maps) in France, SLUB Kartenforum in Germany, Topotijdreis in the Netherlands, Lantmäteriet historical maps in Sweden, Tailte Éireann (formerly OSi) historic 6-inch maps in Ireland, or the USGS historical topographic map collection (topoView) in the US. |
+| GB1900 / Vision of Britain historic names | National place-name databases, e.g. logainm.ie for Ireland. |
+
+### Changes to the design
+
+1. **Use the Wikidata QID as the primary town key.** Keep national codes such as `BUA22CD` or INSEE as extra columns, because the QID is the only ID that works in every country.
+2. **Use one global definition of a town if towns must be comparable across countries.** National definitions of "town" differ. The EU's Global Human Settlement Layer (GHSL) Urban Centre Database outlines urban centres the same way everywhere.
+3. **Store the language with each heading and place name.** Include local names, English names and transliterations (e.g. Köln / Cologne, or Polish versus German historic names), and record which heading scheme each one comes from.
+4. **Allow for changed borders.** Historic maps and older books may name a town under a different country or name, e.g. Breslau, now Wrocław. Wikidata records past countries (P17 with dates) and former names.
+5. **Licences vary by country.** Some national bibliographies are fully open, such as the GND (CC0). Others restrict reuse, so keep the licence column for each record.
+
+Data model additions:
+
+```
+town(..., country_code, national_code, national_code_scheme, ghsl_id)
+town_name(town_id FK, name, language, script, valid_from, valid_to, source)
+town_heading(..., language)   -- scheme now also covers RAMEAU, GND, etc.
+```
+
+### Rollout approach
+
+Extend the data country by country:
+
+1. Run the global layer first. Wikidata, GeoNames, OpenStreetMap, Open Library, FAST/LC and Old Maps Online give partial coverage anywhere straight away.
+2. Then add each country's national library, subject vocabulary and mapping agency as a separate plug-in to the same data model, starting with the countries that matter most.
+
 ## Suggested next step
 
 Prototype the pipeline for 3–5 towns, including at least one ambiguous name such as Newport. Use only Wikidata, ONS BUA, FAST and Open Library for books, and the NLS sheet index plus Old Maps Online links for maps. This will test the identifier crosswalk before you invest in the full harvest.
